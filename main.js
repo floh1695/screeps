@@ -1,47 +1,15 @@
 'use strict';
 
-const S = require('stampit');
+const Builder = require('builder');
+const Harvester = require('harvester');
+const Upgrader = require('upgrader');
 
-const BaseRole = S()
-  .props({
-    creep: null,
-  })
-  .init(function ({
-    creep = this.creep,
-  }) {
-    this.creep = creep;
-  })
-  .methods({
-    run: function () {
-      throw new Error('Virtual method call');
-    },
-  });
-
-const Harvester = S(BaseRole)
-  .methods({
-    run: function () {
-      if(this.creep.carry.energy < this.creep.carryCapacity) {
-        var sources = this.creep.room.find(FIND_SOURCES);
-        if(this.creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-          this.creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-        }
-      }
-      else {
-        var targets = this.creep.room.find(FIND_STRUCTURES, {
-          filter: (structure) => {
-            return (structure.structureType == STRUCTURE_EXTENSION ||
-              structure.structureType == STRUCTURE_SPAWN ||
-              structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity;
-          }
-        });
-        if(targets.length > 0) {
-          if(this.creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            this.creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-          }
-        }
-      }
-    },
-  });
+const roleBuilder = {
+  /** @param {Creep} creep **/
+  run: function(creep) {
+    Builder({ creep }).run();
+  },
+};
 
 const roleHarvester = {
   /** @param {Creep} creep **/
@@ -50,74 +18,11 @@ const roleHarvester = {
 	},
 };
 
-const Upgrader = S(BaseRole)
-  .methods({
-    run: function () {
-      if(this.creep.memory.upgrading && creep.carry.energy == 0) {
-        this.creep.memory.upgrading = false;
-        this.creep.say('harvest');
-      }
-      if(!this.creep.memory.upgrading && creep.carry.energy == creep.carryCapacity) {
-        this.creep.memory.upgrading = true;
-        this.creep.say('upgrade');
-      }
-      
-      if(this.creep.memory.upgrading) {
-        if(this.creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-        this.creep.moveTo(creep.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
-        }
-      }
-      else {
-        var sources = this.creep.room.find(FIND_SOURCES);
-        if(this.creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-          this.creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-        }
-      }
-    },
-  });
-
 const roleUpgrader = {
   /** @param {Creep} creep **/
   run: function(creep) {
     Upgrader({ creep }).run();
 	},
-};
-
-const Builder = S(BaseRole)
-  .methods({
-    run: function () {
-      if(this.creep.memory.building && creep.carry.energy == 0) {
-        this.creep.memory.building = false;
-        this.creep.say('harvest');
-      }
-
-      if(!this.creep.memory.building && creep.carry.energy == creep.carryCapacity) {
-        this.creep.memory.building = true;
-        this.creep.say('build');
-      }
-
-      if(this.creep.memory.building) {
-        var targets = this.creep.room.find(FIND_CONSTRUCTION_SITES);
-        if(targets.length) {
-          if(this.creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-            this.creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-          }
-        }
-      }
-      else {
-        var sources = this.creep.room.find(FIND_SOURCES);
-        if(this.creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-          this.creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-        }
-      }
-    },
-  });
-
-const roleBuilder = {
-  /** @param {Creep} creep **/
-  run: function(creep) {
-    Builder({ creep }).run();
-  },
 };
 
 const loop = function () {
