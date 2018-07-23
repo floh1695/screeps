@@ -14,7 +14,7 @@ const BaseRole = S()
   .methods({
     run: function () {
       throw new Error('Virtual method call');
-    }
+    },
   });
 
 const Harvester = S(BaseRole)
@@ -40,73 +40,84 @@ const Harvester = S(BaseRole)
           }
         }
       }
-    }
+    },
   });
 
 const roleHarvester = {
   /** @param {Creep} creep **/
   run: function(creep) {
     Harvester({ creep }).run();
-	}
+	},
 };
+
+const Upgrader = S(BaseRole)
+  .methods({
+    run: function () {
+      if(this.creep.memory.upgrading && creep.carry.energy == 0) {
+        this.creep.memory.upgrading = false;
+        this.creep.say('harvest');
+      }
+      if(!this.creep.memory.upgrading && creep.carry.energy == creep.carryCapacity) {
+        this.creep.memory.upgrading = true;
+        this.creep.say('upgrade');
+      }
+      
+      if(this.creep.memory.upgrading) {
+        if(this.creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+        this.creep.moveTo(creep.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
+        }
+      }
+      else {
+        var sources = this.creep.room.find(FIND_SOURCES);
+        if(this.creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
+          this.creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
+        }
+      }
+    },
+  });
 
 const roleUpgrader = {
-
-    /** @param {Creep} creep **/
-    run: function(creep) {
-
-        if(creep.memory.upgrading && creep.carry.energy == 0) {
-            creep.memory.upgrading = false;
-            creep.say('🔄 harvest');
-	    }
-	    if(!creep.memory.upgrading && creep.carry.energy == creep.carryCapacity) {
-	        creep.memory.upgrading = true;
-	        creep.say('⚡ upgrade');
-	    }
-
-	    if(creep.memory.upgrading) {
-            if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(creep.room.controller, {visualizePathStyle: {stroke: '#ffffff'}});
-            }
-        }
-        else {
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-            }
-        }
-	}
+  /** @param {Creep} creep **/
+  run: function(creep) {
+    Upgrader({ creep }).run();
+	},
 };
 
+const Builder = S(BaseRole)
+  .methods({
+    run: function () {
+      if(this.creep.memory.building && creep.carry.energy == 0) {
+        this.creep.memory.building = false;
+        this.creep.say('harvest');
+      }
+
+      if(!this.creep.memory.building && creep.carry.energy == creep.carryCapacity) {
+        this.creep.memory.building = true;
+        this.creep.say('build');
+      }
+
+      if(this.creep.memory.building) {
+        var targets = this.creep.room.find(FIND_CONSTRUCTION_SITES);
+        if(targets.length) {
+          if(this.creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
+            this.creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+          }
+        }
+      }
+      else {
+        var sources = this.creep.room.find(FIND_SOURCES);
+        if(this.creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
+          this.creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
+        }
+      }
+    },
+  });
+
 const roleBuilder = {
-
-    /** @param {Creep} creep **/
-    run: function(creep) {
-
-	    if(creep.memory.building && creep.carry.energy == 0) {
-            creep.memory.building = false;
-            creep.say('harvest');
-	    }
-	    if(!creep.memory.building && creep.carry.energy == creep.carryCapacity) {
-	        creep.memory.building = true;
-	        creep.say('build');
-	    }
-
-	    if(creep.memory.building) {
-	        var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-            if(targets.length) {
-                if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-            }
-	    }
-	    else {
-	        var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-            }
-	    }
-	}
+  /** @param {Creep} creep **/
+  run: function(creep) {
+    Builder({ creep }).run();
+  },
 };
 
 const loop = function () {
