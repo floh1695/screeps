@@ -1,67 +1,35 @@
 'use strict';
 
-const Builder = require('builder');
-const Harvester = require('harvester');
-const Upgrader = require('upgrader');
+const RoleApi = require('role');
+const { 
+  realizeRole,
+} = RoleApi.functions;
 
-const roleBuilder = {
-  /** @param {Creep} creep **/
-  run: function(creep) {
-    Builder({ creep }).run();
-  },
-};
-
-const roleHarvester = {
-  /** @param {Creep} creep **/
-  run: function(creep) {
-    Harvester({ creep }).run();
-	},
-};
-
-const roleUpgrader = {
-  /** @param {Creep} creep **/
-  run: function(creep) {
-    Upgrader({ creep }).run();
-	},
-};
-
+/** IO () */
 const loop = function () {
-  if (!Game.creeps['Harvester1']) {
+  verifyCreepExists('harvester1');
+  haveCreepsWork();
+};
+
+/** String -> IO () */
+const verifyCreepExists = function (creepName) {
+  if (!Game.creeps[creepName]) {
     Game.spawns['Spawn1']
-      .createCreep(
-        [ MOVE, WORK, CARRY ],
-        'Harvester1',
-        { role: 'harvester' }
+      .createCreep([ MOVE, WORK, CARRY ],
+        creepName,
+        { 
+          role: 'harvester',
+        }
       );
   }
+};
 
-//  const tower = Game.getObjectById('4fccefd8622e92019e80d52a');
-//  if(tower) {
-//    const closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-//      filter: (structure) => structure.hits < structure.hitsMax
-//    });
-//        
-//    if(closestDamagedStructure) {
-//      tower.repair(closestDamagedStructure);
-//    }
-//
-//    var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-//    if(closestHostile) {
-//      tower.attack(closestHostile);
-//    }
-//  }
-
-  const roleMap = {
-    'harvester': roleHarvester,
-    'upgrader': roleUpgrader,
-    'builder': roleBuilder,
-  };
+/** IO () */
+const haveCreepsWork = function () {
   Object.values(Game.creeps)
-    .map(creep => () => 
-      roleMap[creep.memory.role]
-        .run(creep))
-    .forEach(creepAction => creepAction());
-}
+    .map(realizeRole)
+    .forEach(roleCreep => roleCreep.run());
+};
 
 module.exports = {
   loop,
