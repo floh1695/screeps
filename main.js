@@ -2,30 +2,51 @@
 
 const S = require('stampit');
 
-const roleHarvester = {
+const BaseRole = S()
+  .props({
+    creep: null,
+  })
+  .init(function ({
+    creep = this.creep,
+  }) {
+    this.creep = creep;
+  })
+  .methods({
+    run: function () {
+      throw new Error('Virtual method call');
+    }
+  });
 
-    /** @param {Creep} creep **/
-    run: function(creep) {
-	    if(creep.carry.energy < creep.carryCapacity) {
-            var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
-            }
+const Harvester = S(BaseRole)
+  .methods({
+    run: function () {
+      if(this.creep.carry.energy < this.creep.carryCapacity) {
+        var sources = this.creep.room.find(FIND_SOURCES);
+        if(this.creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
+          this.creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
         }
-        else {
-            var targets = creep.room.find(FIND_STRUCTURES, {
-                    filter: (structure) => {
-                        return (structure.structureType == STRUCTURE_EXTENSION ||
-                                structure.structureType == STRUCTURE_SPAWN ||
-                                structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity;
-                    }
-            });
-            if(targets.length > 0) {
-                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-            }
+      }
+      else {
+        var targets = this.creep.room.find(FIND_STRUCTURES, {
+          filter: (structure) => {
+            return (structure.structureType == STRUCTURE_EXTENSION ||
+              structure.structureType == STRUCTURE_SPAWN ||
+              structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity;
+          }
+        });
+        if(targets.length > 0) {
+          if(this.creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            this.creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
+          }
         }
+      }
+    }
+  });
+
+const roleHarvester = {
+  /** @param {Creep} creep **/
+  run: function(creep) {
+    Harvester({ creep }).run();
 	}
 };
 
